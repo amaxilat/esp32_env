@@ -6,6 +6,8 @@
 #include <BLEDescriptor.h>
 #include <BLE2902.h>
 #include <ble_definitions.h>
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
 #define HW_CHAR
 #ifdef HW_CHAR
 BLECharacteristic* characteristics [6];
@@ -34,20 +36,27 @@ bool oldDeviceConnected = false;
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       deviceConnected = true;
+      Serial.println("->deviceConnected");
     };
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
+      Serial.println("->deviceConnected");
     }
 };
 
 void setup() {
+  WiFi.mode(WIFI_OFF);
   //start the serial
   Serial.begin(115200);
   Serial.println("booting up");
   //and the ble
-  setup_ble();
+  if (!setup_ble()) {
+    Serial.println("error with sensor");
+    while (1);
+  }
   //setup the sensors
   setup_sensors();
+  Serial.println(F("Waiting a client connection to notify..."));
 }
 
 void loop() {
@@ -75,7 +84,7 @@ void setup_sensors() {
 
 void loop_sensors() {
   static unsigned long lastTempMeasurement = 0;
-  if (millis() - lastTempMeasurement > 30000) {
+  if (millis() - lastTempMeasurement > 10000) {
     shouldNotify = true;
 #ifdef USE_BME
     if (! bme.performReading()) {
@@ -96,17 +105,27 @@ void loop_sensors() {
   }
 }
 
-void setup_ble() {
-  byte mac[6];
-  WiFi.macAddress(mac);
+bool setup_ble() {
+  if (!btStart()) {
+    Serial.println("Failed to initialize controller");
+    return false;
+  }
+
+  if (esp_bluedroid_init() != ESP_OK) {
+    Serial.println("Failed to initialize bluedroid");
+    return false;
+  }
+
+  if (esp_bluedroid_enable() != ESP_OK) {
+    Serial.println("Failed to enable bluedroid");
+    return false;
+  }
   char bleMacStr[20];
-  Serial.println("Here");
-  sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac[3], mac[4], mac[5]);
-  //sprintf(bleMacStr, "SparkEnv");
+  const uint8_t * mac_pointer = esp_bt_dev_get_address();
+  sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac_pointer[3], mac_pointer[4], mac_pointer[5]);
   //Create the BLE Device
   BLEDevice::init(bleMacStr);
-  Serial.println("init");
-
+  
   // Create the BLE Server
   BLEServer* pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
@@ -140,7 +159,7 @@ void setup_ble() {
   characteristics[5]->addDescriptor(new BLE2902());
   characteristics[5]->setValue("v0.1");
 #endif
-      Serial.println("characteristics");
+  Serial.println("characteristics");
 
   // Start the service
   sensorService->start();
@@ -154,13 +173,16 @@ void setup_ble() {
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   pServer->startAdvertising(); // restart advertising
   Serial.println(F("start advertising"));
-  Serial.println(F("Waiting a client connection to notify..."));
+  return true;
 }
 
 void loop_ble() {
+  static unsigned long count = 0;
   // notify changed value
   if (deviceConnected && shouldNotify) {
-    Serial.println(F("running notify..."));
+    Serial.print(F("running notify["));
+    Serial.print(count++);
+    Serial.println(F("]..."));
     shouldNotify = false;
     char sensorStrValue[10];
     for (int i = 0; i < 4; i++) {
