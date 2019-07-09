@@ -13,7 +13,7 @@ BLECharacteristic* characteristics [6];
 BLECharacteristic* characteristics [4];
 #endif
 
-//#define USE_BME
+#define USE_BME
 #ifdef USE_BME
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
@@ -44,10 +44,10 @@ void setup() {
   //start the serial
   Serial.begin(115200);
   Serial.println("booting up");
-  //setup the sensors
-  setup_sensors();
   //and the ble
   setup_ble();
+  //setup the sensors
+  setup_sensors();
 }
 
 void loop() {
@@ -98,11 +98,11 @@ void loop_sensors() {
 
 void setup_ble() {
   byte mac[6];
-  //WiFi.macAddress(mac);
+  WiFi.macAddress(mac);
   char bleMacStr[20];
   Serial.println("Here");
-  //sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac[3], mac[4], mac[5]);
-  sprintf(bleMacStr, "SparkEnv");
+  sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac[3], mac[4], mac[5]);
+  //sprintf(bleMacStr, "SparkEnv");
   //Create the BLE Device
   BLEDevice::init(bleMacStr);
   Serial.println("init");
