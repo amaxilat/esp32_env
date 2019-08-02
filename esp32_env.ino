@@ -27,8 +27,6 @@ BLECharacteristic* characteristics [4];
 Adafruit_BME680 bme; // I2C
 #endif
 
-String characteristics_uuid [4]{CHARACTERISTIC_TEMPERATURE_UUID,CHARACTERISTIC_HUMIDITY_UUID,CHARACTERISTIC_VOC_UUID,CHARACTERISTIC_NOISE_UUID};
-
 float sensors[4]; //temperature,humidity,voc,noise
 
 bool deviceConnected = false;
@@ -127,7 +125,7 @@ bool setup_ble() {
   sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac_pointer[3], mac_pointer[4], mac_pointer[5]);
   //Create the BLE Device
   BLEDevice::init(bleMacStr);
-  
+
   // Create the BLE Server
   BLEServer* pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
@@ -136,32 +134,32 @@ bool setup_ble() {
   BLEService *sensorService = pServer->createService(SERVICE_GENERIC_ATTRIBUTE_UUID);
 
   // Create a BLE Characteristic
-  
-    characteristics[0] = sensorService->createCharacteristic(
-                           CHARACTERISTIC_TEMPERATURE_UUID,
-                           BLECharacteristic::PROPERTY_READ   |
-                           BLECharacteristic::PROPERTY_NOTIFY
-                         );
-    characteristics[0]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-    characteristics[1] = sensorService->createCharacteristic(
-                           CHARACTERISTIC_HUMIDITY_UUID,
-                           BLECharacteristic::PROPERTY_READ   |
-                           BLECharacteristic::PROPERTY_NOTIFY
-                         );
-    characteristics[1]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-    characteristics[2] = sensorService->createCharacteristic(
-                           CHARACTERISTIC_VOC_UUID,
-                           BLECharacteristic::PROPERTY_READ   |
-                           BLECharacteristic::PROPERTY_NOTIFY
-                         );
-    characteristics[2]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-    characteristics[3] = sensorService->createCharacteristic(
-                           CHARACTERISTIC_NOISE_UUID,
-                           BLECharacteristic::PROPERTY_READ   |
-                           BLECharacteristic::PROPERTY_NOTIFY
-                         );
-    characteristics[3]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-  
+
+  characteristics[0] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_TEMPERATURE_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[0]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
+  characteristics[1] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_HUMIDITY_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[1]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
+  characteristics[2] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_VOC_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[2]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
+  characteristics[3] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_NOISE_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[3]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
+
   // Create the BLE Service
   BLEService *deviceService = pServer->createService(SERVICE_DEVICE_INFORMATION_UUID);
 #ifdef HW_CHAR
