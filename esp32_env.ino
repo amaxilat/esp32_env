@@ -55,8 +55,6 @@ void loop() {
   loop_ble();
 }
 
-
-
 bool setup_ble() {
   if (!btStart()) {
     Serial.println("Failed to initialize controller");
@@ -102,7 +100,6 @@ bool setup_ble() {
   BLEService *sensorService = pServer->createService(SERVICE_GENERIC_ATTRIBUTE_UUID);
 
   // Create a BLE Characteristic
-
   characteristics[2] = sensorService->createCharacteristic(
                          CHARACTERISTIC_TEMPERATURE_UUID,
                          BLECharacteristic::PROPERTY_READ   |
