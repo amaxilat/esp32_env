@@ -28,7 +28,6 @@ Adafruit_BME680 bme; // I2C
 #endif
 
 String characteristics_uuid [3]{CHARACTERISTIC_TEMPERATURE_UUID,CHARACTERISTIC_HUMIDITY_UUID,CHARACTERISTIC_VOC_UUID};
-
 float sensors[3]; //temperature,humidity,voc
 
 bool deviceConnected = false;
@@ -124,7 +123,7 @@ bool setup_ble() {
   sprintf(bleMacStr, "SparkEnv%02X%02X%02X", mac_pointer[3], mac_pointer[4], mac_pointer[5]);
   //Create the BLE Device
   BLEDevice::init(bleMacStr);
-  
+
   // Create the BLE Server
   BLEServer* pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
@@ -133,7 +132,7 @@ bool setup_ble() {
   BLEService *sensorService = pServer->createService(SERVICE_GENERIC_ATTRIBUTE_UUID);
 
   // Create a BLE Characteristic
-  
+ 
     characteristics[0] = sensorService->createCharacteristic(
                            CHARACTERISTIC_TEMPERATURE_UUID,
                            BLECharacteristic::PROPERTY_READ   |
@@ -152,7 +151,7 @@ bool setup_ble() {
                            BLECharacteristic::PROPERTY_NOTIFY
                          );
     characteristics[2]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-  
+
   // Create the BLE Service
   BLEService *deviceService = pServer->createService(SERVICE_DEVICE_INFORMATION_UUID);
 #ifdef HW_CHAR
