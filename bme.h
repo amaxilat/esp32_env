@@ -1,7 +1,6 @@
+#ifdef USE_BME
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME680.h"
-
-#ifdef USE_BME
 
 #define BME_SCK 13
 #define BME_MISO 12
@@ -53,12 +52,17 @@ bool loop_bme() {
 }
 
 void notify_bme(BLECharacteristic** characteristics, int offset ) {
+#ifdef USE_BME
   char sensorStrValue[10];
   for (int i = 0; i < 3; i++) {
+    if (bme_sensors[i] == 0) {
+      continue;
+    }
     sprintf(sensorStrValue, "%.2f", bme_sensors[i]);
     //TODO: check if this works good with the values or we need to change to string
     characteristics[offset + i]->setValue(sensorStrValue);
     characteristics[offset + i]->notify();
     delay(3); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
   }
+#endif
 }

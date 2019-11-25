@@ -9,14 +9,20 @@
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
 #include <Adafruit_Sensor.h>
-#include <Adafruit_BME680.h>
 
-BLECharacteristic* characteristics [6];
+BLECharacteristic* characteristics [7];
 #define SENSORS_START 2
 
 
-#define USE_BME
+//#define USE_BME
+#ifdef USE_BME
+#include <Adafruit_BME680.h>
+#endif
 #include "bme.h"
+
+#define USE_BSEC
+#include "bsec.h"
+#include "bsecs.h"
 
 bool deviceConnected = false;
 bool shouldNotify = false;
@@ -43,14 +49,26 @@ void setup() {
     Serial.println("error with sensor");
     while (1);
   }
-  //setup the bme
+  //setup the sensor
+#ifdef USE_BME
   setup_bme();
+#endif
+#ifdef USE_BSEC
+  setup_bsec();
+#endif
+
+
   Serial.println(F("Waiting a client connection to notify..."));
 }
 
 void loop() {
   //start with the bme loop
+#ifdef USE_BME
   shouldNotify = loop_bme();
+#endif
+#ifdef USE_BSEC
+  shouldNotify = loop_bsec();
+#endif
   //continue to the ble loop
   loop_ble();
 }
@@ -113,12 +131,23 @@ bool setup_ble() {
                        );
   characteristics[3]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
   characteristics[4] = sensorService->createCharacteristic(
-                         CHARACTERISTIC_VOC_UUID,
+                         "00002B02-0000-1000-8000-00805f9b34fb",
                          BLECharacteristic::PROPERTY_READ   |
                          BLECharacteristic::PROPERTY_NOTIFY
                        );
   characteristics[4]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
-
+  characteristics[5] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_VOC_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[5]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
+  characteristics[6] = sensorService->createCharacteristic(
+                         CHARACTERISTIC_PRESSURE_UUID,
+                         BLECharacteristic::PROPERTY_READ   |
+                         BLECharacteristic::PROPERTY_NOTIFY
+                       );
+  characteristics[6]->addDescriptor(new BLEDescriptor(BLEUUID((uint16_t)0x290C)));
   Serial.println("characteristics");
 
   // Start the service
@@ -144,7 +173,14 @@ void loop_ble() {
     Serial.print(count++);
     Serial.println(F("]..."));
     shouldNotify = false;
+#ifdef USE_BME
     notify_bme(characteristics, SENSORS_START );
+#endif
+#ifdef USE_BSEC
+    notify_bsec(characteristics, SENSORS_START );
+#endif
+
+
   }
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
